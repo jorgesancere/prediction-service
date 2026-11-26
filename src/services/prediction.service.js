@@ -16,12 +16,17 @@ const norm = JSON.parse(
     fs.readFileSync(normPath, "utf8")
 );
 
-let session;
+let session = null;
 
 // Inicializar el modelo
 async function initModel() {
     session = await ort.InferenceSession.create(modelPath);
     console.log("Modelo ONNX cargado correctamente");
+}
+
+// Comprobar si el modelo está cargado en memoria
+function isReady() {
+    return session !== null;
 }
 
 // Obtener nombres de las características
@@ -31,6 +36,12 @@ function getFeatures() {
 
 // Realizar predicción
 async function predict(features) {
+    // Comprobar disponibilidad del modelo
+    if (!isReady()) {
+        const error = new Error("Model is not ready");
+        error.status = 503;
+        throw error;
+    }
 
     // Validar entrada
     if (
@@ -43,7 +54,6 @@ async function predict(features) {
         const error = new Error(
             `Se esperan ${norm.mean.length} valores numéricos`
         );
-
         error.status = 400;
         throw error;
     }
@@ -73,18 +83,17 @@ async function predict(features) {
         (performance.now() - inicio).toFixed(2)
     );
 
-    const prediction = resultado[session.outputNames[0]].data[0];
+    const prediction = Number(resultado[session.outputNames[0]].data[0]);
 
-
-    // Devolver los valores
     return {
-        prediction: prediction,
+        prediction,
         latencyMs
     };
 }
 
 module.exports = {
     initModel,
+    isReady,
     getFeatures,
     predict
 };
