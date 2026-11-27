@@ -1,8 +1,10 @@
+require("dotenv").config();
+
 const mongoose = require("mongoose");
 const app = require("./src/app");
 const predictionService = require("./src/services/prediction.service");
 
-const PORT = 3002;
+const PORT = process.env.PORT || 3002;
 const MONGO_URI = "mongodb://localhost:27017/prediction-service";
 
 async function iniciar() {
