@@ -1,4 +1,3 @@
-const crypto = require("crypto");
 const predictionService = require("../services/prediction.service");
 
 // Comprobar que el servicio está en funcionamiento
@@ -35,20 +34,12 @@ function getFeatures(req, res) {
 // Procesar petición de predicción
 async function predict(req, res) {
     try {
-        const { features } = req.body || {};
+        const { features, meta } = req.body || {};
 
-        const { prediction, latencyMs } =
-            await predictionService.predict(features);
+        const resultado =
+            await predictionService.predict(features, meta);
 
-        // Provisional hasta conectar MongoDB (donde se usará el _id generado)
-        const predictionId = crypto.randomBytes(12).toString("hex");
-
-        res.status(201).json({
-            predictionId,
-            prediction,
-            timestamp: new Date().toISOString(),
-            latencyMs
-        });
+        res.status(201).json(resultado);
 
     } catch (error) {
         console.error(error);

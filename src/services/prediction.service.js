@@ -1,6 +1,7 @@
 const ort = require("onnxruntime-node");
 const path = require("path");
 const fs = require("fs");
+const Prediction = require("../models/prediction.model");
 
 // Rutas de los archivos del modelo
 const modelPath = path.join(
@@ -34,8 +35,8 @@ function getFeatures() {
     return norm.features;
 }
 
-// Realizar predicción
-async function predict(features) {
+// Realizar predicción y guardarla en MongoDB
+async function predict(features, meta = {}) {
     // Comprobar disponibilidad del modelo
     if (!isReady()) {
         const error = new Error("Model is not ready");
@@ -85,9 +86,24 @@ async function predict(features) {
 
     const prediction = Number(resultado[session.outputNames[0]].data[0]);
 
-    return {
+    // Guardar en MongoDB
+    const registro = new Prediction({
+        dataId: meta.dataId || null,
+        features,
         prediction,
+        featureCount: features.length,
+        source: meta.source || null,
+        correlationId: meta.correlationId || null,
         latencyMs
+    });
+
+    const guardado = await registro.save();
+
+    return {
+        predictionId: guardado._id.toString(),
+        prediction: guardado.prediction,
+        timestamp: guardado.timestamp.toISOString(),
+        latencyMs: guardado.latencyMs
     };
 }
 
