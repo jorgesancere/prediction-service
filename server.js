@@ -5,8 +5,7 @@ const app = require("./src/app");
 const predictionService = require("./src/services/prediction.service");
 
 const PORT = process.env.PORT || 3002;
-const MONGO_URI = "mongodb://localhost:27017/prediction-service";
-
+const MONGO_URI = process.env.MONGO_URI || "mongodb://localhost:27017/prediction-service";
 async function iniciar() {
     // Conectar a MongoDB
     await mongoose.connect(MONGO_URI);
